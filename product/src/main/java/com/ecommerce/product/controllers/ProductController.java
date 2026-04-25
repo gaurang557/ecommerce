@@ -17,17 +17,28 @@ public class ProductController {
     public ProductService service;
 
     @GetMapping("/")
-    public List<Product> getAllProducts(){
-        return service.getAllProducts();
+    public ResponseEntity<List<Product>> getAllProducts(){
+        return ResponseEntity.ok(service.getAllProducts());
     }
 
     @GetMapping("/product/{id}")
-    public Product getProductById(@PathVariable Integer id){
-        return service.getProductById(id);
+    public ResponseEntity<Product> getProductById(@PathVariable Integer id){
+        return ResponseEntity.ok(service.getProductById(id));
     }
 
     @GetMapping("/delete/{id}")
-    public void deleteProductById(@PathVariable Integer id){
+    public ResponseEntity<Void> deleteProductById(@PathVariable Integer id){
         service.deleteProduct(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/product")
+    public ResponseEntity<Product> createProduct(@RequestBody Product product){
+        return ResponseEntity.ok(service.createProduct(product));
+    }
+
+    @PutMapping("/product/{id}")
+    public ResponseEntity<Product> updateProduct(@PathVariable Integer id, @RequestBody Product product){
+        return ResponseEntity.ok(service.updateProduct(id, product));
     }
 }

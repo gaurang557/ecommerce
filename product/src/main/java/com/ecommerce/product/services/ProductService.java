@@ -19,11 +19,15 @@ public class ProductService {
         return repo.findById(id).orElse(null);
     }
 
-    public Product editProduct(Product p) {
+    public Product createProduct(Product p) {
         return repo.save(p);
     }
 
     public void deleteProduct(Integer id){
         repo.deleteById(id);
+    }
+
+    public Product updateProduct(Integer id, Product p) {
+        return repo.save(p);
     }
 }

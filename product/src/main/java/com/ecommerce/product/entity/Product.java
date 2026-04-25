@@ -11,7 +11,6 @@ import java.util.Date;
 @Component
 @Entity
 public class Product {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     public String Id;

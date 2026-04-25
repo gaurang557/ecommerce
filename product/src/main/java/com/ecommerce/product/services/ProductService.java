@@ -3,11 +3,11 @@ package com.ecommerce.product.services;
 import com.ecommerce.product.entity.Product;
 import com.ecommerce.product.repositories.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-@Component
+@Service
 public class ProductService {
     @Autowired
     public ProductRepository repo;
@@ -28,6 +28,7 @@ public class ProductService {
     }
 
     public Product updateProduct(Integer id, Product p) {
+        p.setId(id);
         return repo.save(p);
     }
 }

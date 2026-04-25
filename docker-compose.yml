@@ -1,0 +1,60 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ecommerce-postgres
+    environment:
+      POSTGRES_DB: ecommerce
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ecommerce"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  product:
+    build:
+      context: ./product
+      dockerfile: Dockerfile
+    container_name: ecommerce-product
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/ecommerce
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      SERVER_PORT: 8081
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8081:8081"
+
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: ecommerce-api-gateway
+    environment:
+      SERVER_PORT: 8080
+      PRODUCT_SERVICE_URL: http://product:8081
+      CORS_ALLOWED_ORIGIN: "*"
+    depends_on:
+      - product
+    ports:
+      - "8082:8080"
+
+  product-ui:
+    build:
+      context: ./product-ui
+      dockerfile: Dockerfile
+    container_name: ecommerce-product-ui
+    depends_on:
+      - api-gateway
+    ports:
+      - "3002:80"
+
+volumes:
+  postgres_data:

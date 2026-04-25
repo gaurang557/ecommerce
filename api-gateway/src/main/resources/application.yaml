@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: api-gateway
+
+server:
+  port: ${SERVER_PORT:8080}
+
+services:
+  product:
+    url: ${PRODUCT_SERVICE_URL:http://product:8081}
+
+app:
+  cors:
+    allowed-origin: ${CORS_ALLOWED_ORIGIN:*}

@@ -1,6 +1,7 @@
 package com.ecommerce.apigateway.controllers;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -47,6 +48,7 @@ public class ProductGatewayController {
     public ResponseEntity<String> createProduct(@RequestBody String body) {
         return restClient.post()
                 .uri(productServiceUrl + "/product")
+                .contentType(MediaType.APPLICATION_JSON)
                 .body(body)
                 .retrieve()
                 .toEntity(String.class);
@@ -56,6 +58,7 @@ public class ProductGatewayController {
     public ResponseEntity<String> updateProduct(@PathVariable Integer id, @RequestBody String body) {
         return restClient.put()
                 .uri(productServiceUrl + "/product/" + id)
+                .contentType(MediaType.APPLICATION_JSON)
                 .body(body)
                 .retrieve()
                 .toEntity(String.class);

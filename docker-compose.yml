@@ -44,7 +44,7 @@ services:
     depends_on:
       - product
     ports:
-      - "8082:8080"
+      - "8080:8080"
 
   product-ui:
     build:
@@ -54,7 +54,7 @@ services:
     depends_on:
       - api-gateway
     ports:
-      - "3002:80"
+      - "3000:80"
 
 volumes:
   postgres_data:

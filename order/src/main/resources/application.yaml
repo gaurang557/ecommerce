@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: order
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/orderdb}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+server:
+  port: ${SERVER_PORT:8083}
+
+services:
+  product:
+    url: ${PRODUCT_SERVICE_URL:http://localhost:8081}
+  payment:
+    url: ${PAYMENT_SERVICE_URL:http://localhost:8084}

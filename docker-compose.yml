@@ -10,6 +10,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d ecommerce"]
       interval: 10s
@@ -32,6 +33,63 @@ services:
     ports:
       - "8081:8081"
 
+  user:
+    build:
+      context: ./user
+      dockerfile: Dockerfile
+    container_name: ecommerce-user
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/userdb
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      SERVER_PORT: 8082
+      JWT_SECRET: ${JWT_SECRET:-change-me-please-change-this-32byte-minimum-secret}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@ecommerce.local}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin12345}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8082:8082"
+
+  order:
+    build:
+      context: ./order
+      dockerfile: Dockerfile
+    container_name: ecommerce-order
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/orderdb
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      SERVER_PORT: 8083
+      PRODUCT_SERVICE_URL: http://product:8081
+      PAYMENT_SERVICE_URL: http://payment:8084
+    depends_on:
+      postgres:
+        condition: service_healthy
+      product:
+        condition: service_started
+      payment:
+        condition: service_started
+    ports:
+      - "8083:8083"
+
+  payment:
+    build:
+      context: ./payment
+      dockerfile: Dockerfile
+    container_name: ecommerce-payment
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/paymentdb
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      SERVER_PORT: 8084
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8084:8084"
+
   api-gateway:
     build:
       context: ./api-gateway
@@ -40,9 +98,16 @@ services:
     environment:
       SERVER_PORT: 8080
       PRODUCT_SERVICE_URL: http://product:8081
+      USER_SERVICE_URL: http://user:8082
+      ORDER_SERVICE_URL: http://order:8083
+      PAYMENT_SERVICE_URL: http://payment:8084
+      JWT_SECRET: ${JWT_SECRET:-change-me-please-change-this-32byte-minimum-secret}
       CORS_ALLOWED_ORIGIN: "*"
     depends_on:
       - product
+      - user
+      - order
+      - payment
     ports:
       - "8080:8080"
 

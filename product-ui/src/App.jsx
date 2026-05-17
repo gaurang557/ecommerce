@@ -5,7 +5,10 @@ const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/a
 const initialForm = {
   name: "",
   description: "",
-  image: ""
+  image: "",
+  category: "",
+  price: "",
+  stock: ""
 };
 
 function App() {
@@ -14,8 +17,18 @@ function App() {
   const [editingId, setEditingId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [token, setToken] = useState(() => localStorage.getItem("adminToken") || "");
 
   const isEditing = useMemo(() => editingId !== null, [editingId]);
+
+  function authHeaders(extra = {}) {
+    return token ? { ...extra, Authorization: `Bearer ${token}` } : extra;
+  }
+
+  function saveToken(value) {
+    setToken(value);
+    localStorage.setItem("adminToken", value);
+  }
 
   async function fetchProducts() {
     setLoading(true);
@@ -47,7 +60,12 @@ function App() {
     setError("");
 
     const payload = {
-      ...form
+      name: form.name,
+      description: form.description,
+      image: form.image,
+      category: form.category,
+      price: form.price === "" ? 0 : Number(form.price),
+      stock: form.stock === "" ? 0 : Number(form.stock)
     };
 
     const endpoint = isEditing ? `${apiBaseUrl}/product/${editingId}` : `${apiBaseUrl}/product`;
@@ -56,11 +74,15 @@ function App() {
     try {
       const response = await fetch(endpoint, {
         method,
-        headers: { "Content-Type": "application/json" },
+        headers: authHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify(payload)
       });
       if (!response.ok) {
-        throw new Error(`Failed to ${isEditing ? "update" : "create"} product.`);
+        throw new Error(
+          response.status === 401 || response.status === 403
+            ? "Admin token required or invalid."
+            : `Failed to ${isEditing ? "update" : "create"} product.`
+        );
       }
       setForm(initialForm);
       setEditingId(null);
@@ -74,7 +96,10 @@ function App() {
     setForm({
       name: product.name || "",
       description: product.description || "",
-      image: product.image || ""
+      image: product.image || "",
+      category: product.category || "",
+      price: product.price ?? "",
+      stock: product.stock ?? ""
     });
     setEditingId(product.id);
   }
@@ -83,10 +108,15 @@ function App() {
     setError("");
     try {
       const response = await fetch(`${apiBaseUrl}/product/${id}`, {
-        method: "DELETE"
+        method: "DELETE",
+        headers: authHeaders()
       });
       if (!response.ok) {
-        throw new Error("Failed to delete product.");
+        throw new Error(
+          response.status === 401 || response.status === 403
+            ? "Admin token required or invalid."
+            : "Failed to delete product."
+        );
       }
       if (editingId === id) {
         setForm(initialForm);
@@ -101,6 +131,18 @@ function App() {
   return (
     <div className="container">
       <h1>Product Management</h1>
+
+      <section className="card">
+        <h2>Admin Access</h2>
+        <label>
+          Admin JWT (from POST /api/auth/login with an ADMIN account)
+          <input
+            value={token}
+            placeholder="Paste admin token to enable create/update/delete"
+            onChange={(event) => saveToken(event.target.value)}
+          />
+        </label>
+      </section>
 
       <form className="card" onSubmit={handleSubmit}>
         <h2>{isEditing ? "Edit Product" : "Add Product"}</h2>
@@ -118,6 +160,33 @@ function App() {
             required
             value={form.description}
             onChange={(event) => updateForm("description", event.target.value)}
+          />
+        </label>
+        <label>
+          Category
+          <input
+            value={form.category}
+            onChange={(event) => updateForm("category", event.target.value)}
+          />
+        </label>
+        <label>
+          Price
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            value={form.price}
+            onChange={(event) => updateForm("price", event.target.value)}
+          />
+        </label>
+        <label>
+          Stock
+          <input
+            type="number"
+            min="0"
+            step="1"
+            value={form.stock}
+            onChange={(event) => updateForm("stock", event.target.value)}
           />
         </label>
         <label>
@@ -157,6 +226,10 @@ function App() {
               <article key={product.id} className="product-card">
                 <h3>{product.name}</h3>
                 <p>{product.description}</p>
+                <p className="meta">
+                  {product.category && <span>{product.category} · </span>}
+                  ${Number(product.price ?? 0).toFixed(2)} · {product.stock ?? 0} in stock
+                </p>
                 {product.image && (
                   <a href={product.image} target="_blank" rel="noreferrer">
                     Open Image

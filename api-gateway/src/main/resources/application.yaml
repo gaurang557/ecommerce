@@ -7,7 +7,17 @@ server:
 
 services:
   product:
-    url: ${PRODUCT_SERVICE_URL:http://product:8081}
+    url: ${PRODUCT_SERVICE_URL:http://localhost:8081}
+  user:
+    url: ${USER_SERVICE_URL:http://localhost:8082}
+  order:
+    url: ${ORDER_SERVICE_URL:http://localhost:8083}
+  payment:
+    url: ${PAYMENT_SERVICE_URL:http://localhost:8084}
+
+security:
+  jwt:
+    secret: ${JWT_SECRET:change-me-please-change-this-32byte-minimum-secret}
 
 app:
   cors:
